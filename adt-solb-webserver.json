@@ -1,0 +1,79 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "Amaysim Test WebServer Stack",
+	"Parameters" : {
+		"AmaysimNetworkStackName" : {
+			"Description" : "Amaysim Network Stack",
+			"Type" : "String",
+			"MinLength" : "1",
+			"MaxLength" : "255",
+			"Default" : "adt-solb-network"
+		},
+		"AmaysimDatabaseStackName" : {
+			"Description" : "Amaysim Database Stack",
+			"Type" : "String",
+			"MinLength" : "1",
+			"MaxLength" : "255",
+			"Default" : "adt-solb-database"
+		},
+		"AmaysimKeyName" : {
+			"Type" : "AWS::EC2::KeyPair::KeyName",
+			"Default" : "michael.garcia"
+		}
+	},
+	"Resources" : {
+		"AmaysimLaunchConfiguration" : {
+			"Type" : "AWS::AutoScaling::LaunchConfiguration",
+			"Properties" : {
+				"AssociatePublicIpAddress" : "true",
+				"ImageId" : "ami-34171d57",
+				"InstanceType" : "t2.micro",
+				"KeyName" : {"Ref" : "AmaysimKeyName"},
+				"SecurityGroups" : [
+					{"Fn::ImportValue" : {"Fn::Sub" : "${AmaysimNetworkStackName}-AmaysimSGPublicSub02ID"}},
+					{"Fn::ImportValue" : {"Fn::Sub" : "${AmaysimNetworkStackName}-AmaysimSGPublicSub03ID"}}
+				],
+				"UserData" : {
+					"Fn::Base64" : {
+						"Fn::Join" : ["",
+							[
+								"#!/bin/bash -ex\n",
+								"sudo yum install -y httpd php php-mysql wget\n",
+								"sudo systemctl start httpd\n",
+								"sudo systemctl enable httpd\n",
+								"sudo setsebool -P httpd_can_network_connect_db on\n",
+								"wget https://s3-ap-southeast-2.amazonaws.com/michael.garcia/app1.tgz\n",
+								"sudo tar -xzvf app1.tgz -C /var/www/html\n",
+								"sudo sed -i 's/localhost/", {"Fn::ImportValue" : {"Fn::Sub" : "${AmaysimDatabaseStackName}-AmaysimDBClusterEndpointID"}}, "/' /var/www/html/index.php"
+							]
+						]
+					}
+				}
+			}
+		},
+		"AmaysimWebServerGroupSub02" : {
+			"Type" : "AWS::AutoScaling::AutoScalingGroup",
+			"Properties" : {
+				"LoadBalancerNames" : [{"Fn::ImportValue" : {"Fn::Sub" : "${AmaysimNetworkStackName}-AmaysimLoadBalancerID"}}],
+				"LaunchConfigurationName" : {"Ref" : "AmaysimLaunchConfiguration"},
+				"MinSize" : "2",
+				"MaxSize" : "2",
+				"DesiredCapacity" : "2",
+				"VPCZoneIdentifier" : [{"Fn::ImportValue" : {"Fn::Sub" : "${AmaysimNetworkStackName}-AmaysimPubSub02ID"}}],
+				"Tags" : [{"Key" : "Name", "Value" : "adt-solb Web Server Sub2", "PropagateAtLaunch" : "true"}]
+			}
+		},
+		"AmaysimWebServerGroupSub03" : {
+			"Type" : "AWS::AutoScaling::AutoScalingGroup",
+			"Properties" : {
+				"LoadBalancerNames" : [{"Fn::ImportValue" : {"Fn::Sub" : "${AmaysimNetworkStackName}-AmaysimLoadBalancerID"}}],
+				"LaunchConfigurationName" : {"Ref" : "AmaysimLaunchConfiguration"},
+				"MinSize" : "2",
+				"MaxSize" : "2",
+				"DesiredCapacity" : "2",
+				"VPCZoneIdentifier" : [{"Fn::ImportValue" : {"Fn::Sub" : "${AmaysimNetworkStackName}-AmaysimPubSub03ID"}}],
+				"Tags" : [{"Key" : "Name", "Value" : "adt-solb Web Server Sub3", "PropagateAtLaunch" : "true"}]
+			}
+		}
+	}
+}

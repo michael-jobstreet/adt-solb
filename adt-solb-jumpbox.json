@@ -1,0 +1,42 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "Amaysim Test JumpBox Stack",
+	"Parameters" : {
+		"AmaysimNetworkStackName" : {
+			"Description" : "Amaysim Network Stack",
+			"Type" : "String",
+			"MinLength" : "1",
+			"MaxLength" : "255",
+			"Default" : "adt-solb-network"
+		},
+		"AmaysimKeyName" : {
+			"Type" : "AWS::EC2::KeyPair::KeyName",
+			"Default" : "michael.garcia"
+		}
+	},
+	"Resources" : {
+		"AmaysimJumpServer" : {
+			"Type" : "AWS::EC2::Instance",
+			"Properties" : {
+				"AvailabilityZone" : "ap-southeast-2a",
+				"ImageId" : "ami-34171d57",
+				"InstanceType" : "t2.micro",
+				"KeyName" : {"Ref" : "AmaysimKeyName"},
+				"NetworkInterfaces" : [{
+					"AssociatePublicIpAddress" : "true",
+					"DeleteOnTermination" : "true",
+					"DeviceIndex" : "0",
+					"SubnetId" : {"Fn::ImportValue" : {"Fn::Sub" : "${AmaysimNetworkStackName}-AmaysimPubSub01ID"}},
+					"GroupSet" : [{"Fn::ImportValue" : {"Fn::Sub" : "${AmaysimNetworkStackName}-AmaysimSGPublicSub01ID"}}]
+				}],
+				"Tags" : [{"Key" : "Name", "Value" : "adt-solb Amaysim Jump Server"}]
+			}
+		}
+	},
+	"Outputs" : {
+		"AmaysimJumpServerName" : {
+			"Description" : "Connenct using ssh",
+			"Value" : {"Fn::Join" : ["", ["ssh -i username.pem -A centos@", {"Fn::GetAtt": ["AmaysimJumpServer", "PublicDnsName"]}]]}
+		}
+	}
+}

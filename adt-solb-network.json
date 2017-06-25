@@ -1,0 +1,253 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "Amaysim Test Network Stack",
+	"Resources" : {
+		"AmaysimVPC02" : {
+			"Type" : "AWS::EC2::VPC",
+			"Properties" : {
+				"CidrBlock" : "10.0.0.0/16",
+				"EnableDnsHostnames" : "true",
+				"Tags" : [{"Key" : "Name", "Value" : "adt-solb Amaysim VPC01"}]
+			}
+		},
+		"AmaysimIGW" : {
+			"Type" : "AWS::EC2::InternetGateway",
+			"Properties" : {
+				"Tags" : [{"Key" : "Name", "Value" : "adt-solb Amaysim IGW"}]
+			}
+		},
+		"AmaysimVPCIGWAttachment" : {
+			"Type" : "AWS::EC2::VPCGatewayAttachment",
+			"Properties" : {
+				"InternetGatewayId" : {"Ref" : "AmaysimIGW"},
+				"VpcId" : {"Ref" : "AmaysimVPC02"}
+			}
+		},
+		"AmaysimRT01" : {
+			"Type" : "AWS::EC2::RouteTable",
+			"Properties" : {
+				"VpcId" : {"Ref" : "AmaysimVPC02"},
+				"Tags" : [{"Key" : "Name", 	"Value" : "adt-solb Amaysim RouteTable01"}]
+			}
+		},
+		"AmaysimRouteToInternet" : {
+			"Type" : "AWS::EC2::Route",
+			"DependsOn" : "AmaysimVPCIGWAttachment",
+			"Properties" : {
+				"RouteTableId" : {"Ref" : "AmaysimRT01"},
+				"DestinationCidrBlock" : "0.0.0.0/0",
+				"GatewayId" : {"Ref" : "AmaysimIGW"}
+			}
+		},
+		"AmaysimPubSub01" : {
+			"Type" : "AWS::EC2::Subnet",
+			"Properties" : {
+				"AvailabilityZone" : "ap-southeast-2a",
+				"CidrBlock" : "10.0.1.0/24",
+				"VpcId" : {"Ref" : "AmaysimVPC02"},
+				"Tags" : [{"Key" : "Name", "Value" : "adt-solb Amaysim Public Subnet01"}]
+			}
+		},
+		"AmaysimPubSub01RTA01" : {
+			"Type" : "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties" : {
+				"SubnetId" : {"Ref" : "AmaysimPubSub01"},
+				"RouteTableId" : {"Ref" : "AmaysimRT01"}
+			}
+		},
+		"AmaysimSGPublicSub01" : {
+			"Type" : "AWS::EC2::SecurityGroup",
+			"Properties" : {
+				"GroupDescription" : "Amaysim Security Group Public Subnet01",
+				"Tags" : [{"Key" : "Name", "Value" : "adt-solb Amaysim SG Public Sub01"}],
+				"VpcId" : {"Ref" : "AmaysimVPC02"}
+			}
+		},
+		"AmaysimPublicInboundSSH" : {
+			"Type" : "AWS::EC2::SecurityGroupIngress",
+			"Properties" : {
+				"GroupId" : {"Ref" : "AmaysimSGPublicSub01"},
+				"CidrIp" : "0.0.0.0/0",
+				"IpProtocol" : "tcp",
+				"FromPort" : "22",
+				"ToPort" : "22"
+			}
+		},
+		"AmaysimPubSub02" : {
+			"Type" : "AWS::EC2::Subnet",
+			"Properties" : {
+				"AvailabilityZone" : "ap-southeast-2a",
+				"CidrBlock" : "10.0.2.0/24",
+				"VpcId" : {"Ref" : "AmaysimVPC02"},
+				"Tags" : [{"Key" : "Name", "Value" : "adt-solb Amaysim Public Subnet 02"}]
+			}
+		},
+		"AmaysimPubSub02RTA02" : {
+			"Type" : "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties" : {
+				"SubnetId" : {"Ref" : "AmaysimPubSub02"},
+				"RouteTableId" : {"Ref" : "AmaysimRT01"}
+			}
+		},
+		"AmaysimSGPublicSub02" : {
+			"Type" : "AWS::EC2::SecurityGroup",
+			"Properties" : {
+				"GroupDescription" : "Amaysim Security Group Public Subnet02",
+				"Tags" : [{"Key" : "Name", "Value" : "adt-solb Amaysim SG Public Sub02"}],
+				"VpcId" : {"Ref" : "AmaysimVPC02"}
+			}
+		},
+		"AmaysimPublicInboundHTTP02" : {
+			"Type" : "AWS::EC2::SecurityGroupIngress",
+			"Properties" : {
+				"GroupId" : {"Ref" : "AmaysimSGPublicSub02"},
+				"CidrIp" : "0.0.0.0/0",
+				"IpProtocol" : "tcp",
+				"FromPort" : "80",
+				"ToPort" : "80"
+			}
+		},
+		"AmaysimPrivateInboundSSH02" : {
+			"Type" : "AWS::EC2::SecurityGroupIngress",
+			"Properties" : {
+				"GroupId" : {"Ref" : "AmaysimSGPublicSub02"},
+				"CidrIp" : "10.0.1.0/24",
+				"IpProtocol" : "tcp",
+				"FromPort" : "22",
+				"ToPort" : "22"
+			}
+		},
+		"AmaysimPubSub03" : {
+			"Type" : "AWS::EC2::Subnet",
+			"Properties" : {
+				"AvailabilityZone" : "ap-southeast-2b",
+				"CidrBlock" : "10.0.3.0/24",
+				"VpcId" : {"Ref" : "AmaysimVPC02"},
+				"Tags" : [{"Key" : "Name", "Value" : "adt-solb Amaysim Public Subnet 03"}]
+			}
+		},
+		"AmaysimPubSub03RTA03" : {
+			"Type" : "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties" : {
+				"SubnetId" : {"Ref" : "AmaysimPubSub03"},
+				"RouteTableId" : {"Ref" : "AmaysimRT01"}
+			}
+		},
+		"AmaysimSGPublicSub03" : {
+			"Type" : "AWS::EC2::SecurityGroup",
+			"Properties" : {
+				"GroupDescription" : "Amaysim Security Group Public Subnet03",
+				"Tags" : [{"Key" : "Name", "Value" : "adt-solb Amaysim SG Public Sub03"}],
+				"VpcId" : {"Ref" : "AmaysimVPC02"}
+			}
+		},
+		"AmaysimPublicInboundHTTP03" : {
+			"Type" : "AWS::EC2::SecurityGroupIngress",
+			"Properties" : {
+				"GroupId" : {"Ref" : "AmaysimSGPublicSub03"},
+				"CidrIp" : "0.0.0.0/0",
+				"IpProtocol" : "tcp",
+				"FromPort" : "80",
+				"ToPort" : "80"
+			}
+		},
+		"AmaysimPrivateInboundSSH03" : {
+			"Type" : "AWS::EC2::SecurityGroupIngress",
+			"Properties" : {
+				"GroupId" : {"Ref" : "AmaysimSGPublicSub03"},
+				"CidrIp" : "10.0.1.0/24",
+				"IpProtocol" : "tcp",
+				"FromPort" : "22",
+				"ToPort" : "22"
+			}
+		},
+		"AmaysimLoadBalancerSG" : {
+			"Type" : "AWS::EC2::SecurityGroup",
+			"Properties" : {
+				"GroupDescription" : "Amaysim LoadBalancer Security Group",
+				"Tags" : [{"Key" : "Name", "Value" : "adt-solb Amaysim LoadBalancer SG"}],
+				"VpcId" : {"Ref" : "AmaysimVPC02"}
+			}
+		},
+		"AmaysimLoadBalancerInboundHTTP" : {
+			"Type" : "AWS::EC2::SecurityGroupIngress",
+			"Properties" : {
+				"GroupId" : {"Ref" : "AmaysimLoadBalancerSG"},
+				"CidrIp" : "0.0.0.0/0",
+				"IpProtocol" : "tcp",
+				"FromPort" : "80",
+				"ToPort" : "80"
+			}
+		},
+		"AmaysimLoadBalancer" : {
+			"Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+			"Properties" : {
+				"Subnets" : [{"Ref" : "AmaysimPubSub02"}, {"Ref" : "AmaysimPubSub03"}],
+				"Listeners" : [{
+					"InstancePort" : "80",
+					"InstanceProtocol" : "HTTP",
+					"LoadBalancerPort" : "80",
+					"Protocol" : "HTTP"
+				}],
+				"HealthCheck" : {
+					"Target" : "HTTP:80/index.php",
+					"Interval" : "10",
+					"Timeout" : "5",
+					"HealthyThreshold" : "3",
+					"UnhealthyThreshold" : "2"
+				},
+				"Scheme" : "internet-facing",
+				"SecurityGroups" : [{"Ref" : "AmaysimLoadBalancerSG"}], 
+				"CrossZone" : "true",
+				"Tags" : [{"Key": "Name", "Value" : "adt-solb Amaysim LoadBalancer"}]
+			}
+		}
+	},
+	"Outputs" : {
+		"AmaysimLoadBalancerName" : {
+			"Description" : "Click to visit the site",
+			"Value" : {"Fn::Join" : ["", ["http://", {"Fn::GetAtt": ["AmaysimLoadBalancer", "DNSName"]}]]}
+		},
+		"AmaysimLoadBalancerId" : {
+			"Description" : "LoadBalancer ID",
+			"Value" : {"Ref" : "AmaysimLoadBalancer"},
+			"Export" : {"Name" : {"Fn::Sub" : "${AWS::StackName}-AmaysimLoadBalancerID"}}
+		},
+		"AmaysimVPC02Id" : {
+			"Description" : "VPC02 ID",
+			"Value" : {"Ref" : "AmaysimVPC02"},
+			"Export" : {"Name" : {"Fn::Sub" : "${AWS::StackName}-AmaysimVPC02ID"}}
+		},
+		"AmaysimPubSub01Id" : {
+			"Description" : "PubSub01 ID",
+			"Value" : {"Ref" : "AmaysimPubSub01"},
+			"Export" : {"Name" : {"Fn::Sub" : "${AWS::StackName}-AmaysimPubSub01ID"}}
+		},
+		"AmaysimSGPublicSub01Id" : {
+			"Description" : "PubSub01 SG ID",
+			"Value" : {"Fn::GetAtt" : ["AmaysimSGPublicSub01", "GroupId"]},
+			"Export" : {"Name" : {"Fn::Sub" : "${AWS::StackName}-AmaysimSGPublicSub01ID"}}
+		},
+		
+		"AmaysimPubSub02Id" : {
+			"Description" : "PubSub02 ID",
+			"Value" : {"Ref" : "AmaysimPubSub02"},
+			"Export" : {"Name" : {"Fn::Sub" : "${AWS::StackName}-AmaysimPubSub02ID"}}
+		},
+		"AmaysimSGPublicSub02Id" : {
+			"Description" : "PubSub02 SG ID",
+			"Value" : {"Fn::GetAtt" : ["AmaysimSGPublicSub02", "GroupId"]},
+			"Export" : {"Name" : {"Fn::Sub" : "${AWS::StackName}-AmaysimSGPublicSub02ID"}}
+		},
+		"AmaysimPubSub03Id" : {
+			"Description" : "PubSub03 ID",
+			"Value" : {"Ref" : "AmaysimPubSub03"},
+			"Export" : {"Name" : {"Fn::Sub" : "${AWS::StackName}-AmaysimPubSub03ID"}}
+		},
+		"AmaysimSGPublicSub03Id" : {
+			"Description" : "PubSub03 SG ID",
+			"Value" : {"Fn::GetAtt" : ["AmaysimSGPublicSub03", "GroupId"]},
+			"Export" : {"Name" : {"Fn::Sub" : "${AWS::StackName}-AmaysimSGPublicSub03ID"}}
+		}
+	}
+}
